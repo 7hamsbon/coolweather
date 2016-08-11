@@ -37,26 +37,28 @@ public class HttpUtil
 					conn.setConnectTimeout(8000);
 					//获得输入流
 					InputStream in = conn.getInputStream();
-					Log.d("HttpUtil", "1");
+					Log.e("HttpUtil", "1");
+					Log.e("address", address);
 					BufferedReader br = new BufferedReader(new InputStreamReader(in));
-					Log.d("HttpUtil", "2");
+					Log.e("HttpUtil", "2");
 					String line ="";
 					StringBuffer sb = new StringBuffer();
-					Log.d("HttpUtil", "3");
+					Log.e("HttpUtil", "3");
 					//获得请求内容存储在 StringBuffer 里面
 					while((line = br.readLine()) != null)
 					{
 						sb.append(line);
 					}
-					Log.d("HttpUtil", "4");
+					Log.e("HttpUtil", "4");
 					//回调方法
 					if(listener !=null)
 					{
 						listener.onFinished(sb.toString());
 					}
-					Log.d("HttpUtil", "5");
+					Log.e("HttpUtil", "5");
 				} catch (Exception e)
 				{
+					Log.e("HttpUtil", "catch");
 					if(listener !=null)
 					{
 						listener.onError(e);

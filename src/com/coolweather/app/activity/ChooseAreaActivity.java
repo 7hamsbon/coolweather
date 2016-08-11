@@ -5,7 +5,10 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.Window;
@@ -82,6 +85,10 @@ public class ChooseAreaActivity extends Activity
 	 */
 	private City selectedCity;
 	/**
+	 * 用来判断是否只有一个市
+	 */
+	private boolean isOnlyCity = false;
+	/**
 	 * 存放选中的 县
 	 */
 //	private Country selectedCountry;
@@ -90,13 +97,26 @@ public class ChooseAreaActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		//判断是不是有默认城市，有的话直接跳转
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+		boolean isSelectedCity = pref.getBoolean("selected_city", false);
+		if(isSelectedCity)
+		{
+			Intent intent = new Intent(this,WeatherActivity.class);
+			startActivity(intent);
+			finish();
+			return;
+		}
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.choose_area);
+		//获取部件实例
 		textView = (TextView)findViewById(R.id.title_text);
 		listView = (ListView)findViewById(R.id.list_view);
 		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, dataList);
 		listView.setAdapter(adapter);
+		//获取数据库操作类实例
 		coolWeatherDB = CoolWeatherDB.getCoolWeatherDB(this);
+		//为子项添加监听器
 		listView.setOnItemClickListener(new OnItemClickListener()
 		{
 			@Override
@@ -111,6 +131,16 @@ public class ChooseAreaActivity extends Activity
 				{
 					selectedCity = cityList.get(position);
 					queryCountries();
+				}else if(currentLevel == LEVEL_COUNTRY)
+				{
+					//获取县代号
+					String countryCode = countryList.get(position).getCountryCode();
+					Intent intent = new Intent(ChooseAreaActivity.this,WeatherActivity.class);
+					//将县代号作为一个参数传入
+					intent.putExtra("country_code", countryCode);
+					startActivity(intent);
+					finish();
+					return;
 				}
 			}
 		});
@@ -146,15 +176,24 @@ public class ChooseAreaActivity extends Activity
 		cityList = coolWeatherDB.loadCityOfProvince(selectedProvince.getId());
 		if(cityList.size()>0)
 		{
-			dataList.clear();
-			for(City city:cityList)
+			if(cityList.size()>1)
 			{
-				dataList.add(city.getCityName());
+				dataList.clear();
+				for(City city:cityList)
+				{
+					dataList.add(city.getCityName());
+				}
+				adapter.notifyDataSetChanged();
+				listView.setSelection(0);
+				textView.setText(selectedProvince.getProvinceName());
+				currentLevel = LEVEL_CITY;
 			}
-			adapter.notifyDataSetChanged();
-			listView.setSelection(0);
-			textView.setText(selectedProvince.getProvinceName());
-			currentLevel = LEVEL_CITY;
+			else
+			{
+				selectedCity = cityList.get(0);
+				isOnlyCity = true;
+				queryCountries();
+			}
 		}else
 		{
 			queryFromServer(selectedProvince.getProvinceCode(),"city");
@@ -285,7 +324,15 @@ public class ChooseAreaActivity extends Activity
 			queryProvinces();
 		}else if(currentLevel == LEVEL_COUNTRY)
 		{
-			queryCities();
+			if(isOnlyCity)
+			{
+				isOnlyCity = false;
+				queryProvinces();
+			}
+			else
+			{
+				queryCities();
+			}
 		}
 	}
 	
