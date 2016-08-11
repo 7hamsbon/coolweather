@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.collweather.app.R;
+import com.coolweather.app.service.AutoUpdateService;
 import com.coolweather.app.util.HttpCallbackListener;
 import com.coolweather.app.util.HttpUtil;
 import com.coolweather.app.util.Utility;
@@ -92,6 +93,8 @@ public class WeatherActivity extends Activity implements OnClickListener
 			// 没有省级代号的时候显示当地的，即 SharePreferences 文件中已经有本地的天气信息了
 			showWeather();
 		}
+		Intent intent = new Intent(this,AutoUpdateService.class);
+		startService(intent);
 	}
 
 	/**
