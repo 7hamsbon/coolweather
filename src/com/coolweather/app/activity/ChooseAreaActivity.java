@@ -93,14 +93,19 @@ public class ChooseAreaActivity extends Activity
 	 */
 //	private Country selectedCountry;
 	
+	/**
+	 * 标记是不是从 WeatherActivity 传过来的
+	 */
+	private boolean fromWeatherActivity;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		//判断是不是有默认城市，有的话直接跳转
 		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+		fromWeatherActivity = getIntent().getBooleanExtra("from_weather_activity", false);
 		boolean isSelectedCity = pref.getBoolean("selected_city", false);
-		if(isSelectedCity)
+		if(isSelectedCity && !fromWeatherActivity)
 		{
 			Intent intent = new Intent(this,WeatherActivity.class);
 			startActivity(intent);
@@ -318,6 +323,11 @@ public class ChooseAreaActivity extends Activity
 	{
 		if(currentLevel == LEVEL_PROVINCE)
 		{
+			if(fromWeatherActivity)
+			{
+				Intent intent = new Intent(this,WeatherActivity.class);
+				startActivity(intent);
+			}
 			finish();
 		}else if(currentLevel == LEVEL_CITY)
 		{

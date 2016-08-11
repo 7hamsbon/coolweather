@@ -1,22 +1,33 @@
 package com.coolweather.app.activity;
 
-import com.collweather.app.R;
-import com.coolweather.app.util.HttpCallbackListener;
-import com.coolweather.app.util.HttpUtil;
-import com.coolweather.app.util.Utility;
-
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class WeatherActivity extends Activity
+import com.collweather.app.R;
+import com.coolweather.app.util.HttpCallbackListener;
+import com.coolweather.app.util.HttpUtil;
+import com.coolweather.app.util.Utility;
+
+public class WeatherActivity extends Activity implements OnClickListener
 {
+	/**
+	 *	切换城市视图 
+	 */
+	private Button switchCity;
+	/**
+	 * 更新天气视图
+	 */
+	private Button refreshWeather;
 	/**
 	 * 显示天气的布局，用来设置其可见性
 	 */
@@ -61,6 +72,12 @@ public class WeatherActivity extends Activity
 		weatherDespText = (TextView) findViewById(R.id.weather_desp);
 		temp1Text = (TextView) findViewById(R.id.temp1);
 		temp2Text = (TextView) findViewById(R.id.temp2);
+		switchCity = (Button)findViewById(R.id.switch_city);
+		refreshWeather = (Button)findViewById(R.id.refresh_weather);
+		
+		//为按钮添加监听器
+		switchCity.setOnClickListener(this);
+		refreshWeather.setOnClickListener(this);
 
 		// 获得城市代码
 		String countryCode = getIntent().getStringExtra("country_code");
@@ -115,7 +132,11 @@ public class WeatherActivity extends Activity
 						String[] array = response.split("\\|");
 						if(array!=null&&array.length==2)
 						{
+							SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this);
+							SharedPreferences.Editor editor = pref.edit();
 							String weatherCode = array[1];
+							editor.putString("weather_code", weatherCode);
+							editor.commit();
 							queryWeatherInfo(weatherCode);
 						}
 					}
@@ -168,6 +189,30 @@ public class WeatherActivity extends Activity
 		weatherDespText.setText(pref.getString("weather_desp", ""));
 		temp1Text.setText(pref.getString("temp1", ""));
 		temp2Text.setText(pref.getString("temp2", ""));
+	}
+
+	@Override
+	public void onClick(View v)
+	{
+		switch(v.getId())
+		{
+			case R.id.switch_city:
+				Intent intent = new Intent(WeatherActivity.this,ChooseAreaActivity.class);
+				intent.putExtra("from_weather_activity", true);
+				startActivity(intent);
+				finish();
+				break;
+			case R.id.refresh_weather:
+				publishText.setText("同步中.....");
+				SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+				String weatherCode = pref.getString("weather_code", "");
+				if(!TextUtils.isEmpty(weatherCode))
+				{
+					queryWeatherInfo(weatherCode);
+				}
+				break;
+			default:
+		}
 	}
 
 }
